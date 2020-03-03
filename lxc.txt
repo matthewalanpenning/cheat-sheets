@@ -1,0 +1,127 @@
+#Installing LXD/LXC on ubuntu
+apt install lxd lxd-client
+
+#Intialize LXD for configuration
+lxd init 
+  - dir or zfs storage backend
+  - LXD over network, yes or no
+  - Address to bind LXD, all
+  - Which port, 8443
+  - Trust password that is shared secret between clients
+  - Configure LXD bridge, yes or no
+    - lxdbr0, easy name to identify
+  - Provide IPv4, yes
+    - can be any address, randomized
+    - NAT traffic, yes
+  - Provide IPv6, yes or no
+    - NAT, no
+	
+#Show a list of containers
+lxc list
+
+#Create a new ubuntu 18.04 container, container name optional
+lxc launch ubuntu:18.04 <container name>
+
+#Open bash shell in container
+lxc exec <container name> -- /bin/bash
+
+#To stop running container
+lxc stop <container name>
+
+#To delete container, must be stopped
+lxc rm <container name>
+
+#To start a stoppped container
+lxc start <container name>
+
+#Lauch local file editor of a file on a container
+lxc file edit <container name>/filepath/filename
+
+#Push a local file to container
+lxc file push <filename> <container name>/filepath
+
+#Create snapshot of container
+lxc snapshot <container name> <snapshot name>
+
+#To view details about container
+lxc info <container name>
+
+#To restore container from previous snapshot
+lxc restore <container name> <snapshot name>
+
+#To delete a snapshot
+lxc delect <container>/<snapshot name>
+
+#To create a new container from other container's snapshot
+lxc copy <old container name>/<snapshot> <new container name>
+ 
+-------------------------------------------------------
+#Show network profiles
+lxc profile list
+
+#See details of profile
+lxc profile show <profile name>
+
+#Copy default network profile to new profile	
+lxc profile copy default <new profile>
+
+#Edit profile using editor
+lxc profile edit <profile name>
+
+#Change eth0 to use macvlan (bridge)
+lxc profile device set <profile name> eth0 nictype macvlan
+
+#Change eth0 to use host adapter eno1 as parent device
+lxc profile device set <profile name> eth0 parent eno1
+
+#Create container that uses a specific profile
+lxc launch -p <profile name> ubuntu:18.04 net1 <container name>
+
+-------------------------------------------------------
+#List of remote locations to download images from
+lxc remote list
+
+#List downloaded container images
+lxc image list
+
+#To delete locally saved images
+lxc image delete <image name>
+
+
+#Working with lightweight alpine container
+  - lxc launch images:alpine/3.5 alpine-matt #gets from remote location
+  - lxc exec alpine-matt --ash #does not have /bin/bash, very light linux
+
+
+#Troubleshooting issues
+  - Missing parent lxdbr0 error
+    - sudo dpkg-reconfigure -p medium lxd
+
+-------------------------------------------------------
+#Setup remote port listening for secondary server
+lxc config set core.https_address "[::]:8443"
+
+#Setup password for lxc connections
+lxc config set core.trust_password <password>
+
+#Connect to remote lxc server
+lxc remote add <label> <ip address>:8443
+	
+#List running containers on remote server
+lxc list <label>
+
+#List images on remote server
+lxc image list second
+
+-------------------------------------------------------
+#Publish snapshot to a useable image
+lxc publish <container>/<snapshot> --alias <new image name>
+
+#Export a container
+lxc image export <container> <filepath>
+
+
+
+systemctl net.ipv4.ip_forward #should came back as 1, if 0 need to set forward bit
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 80 -j DNAT --to 10.10.10.120:80
+

@@ -1,0 +1,99 @@
+#Install ZFS support on Ubuntu
+apt install zfsutils-linux 
+
+#List current zpools
+zpool list
+
+#Create a new zpool
+zpool create <pool name> /dev/sdb
+
+#Check the status of a zpool
+zpool status <pool name>
+
+#Deleting the zpool
+zpool destroy <pool name>
+
+#Create a mirrored zpool
+zpool create <pool name> mirror /dev/sdb /dev/sdc
+
+#Expanding existing zpool with additional mirror
+zpool add <pool name> mirror /dev/sdd /dev/sde
+
+#Create a RAID 5 zpool
+zpool create <pool name> raidz /dev/sdb /dev/sdc /dev/sdd
+
+#Adding disk to raidz, this does not grow existing raid set, but creates additional set
+zpool add <poolname> raidz /dev/sde /dev/sdf /dev/sdg  
+
+#Create a RAID 10 zpool
+zpool create <pool name> mirror /dev/sdb /dev/sdc mirror /dev/sdd /dev/sde
+
+#Simply replace failed disk sdc with sdd
+zpool replace <pool name> /dev/sdc /dev/sdd
+
+#Take a disk offline that is failing, then you can pull disk and replace
+zpool offline <pool name> /dev/sdc
+
+#Put replaced disk back online
+zpool online <pool name> /dev/sdc
+
+#If using a SSD log disk, be sure to mirror it up
+#Add log to pool
+zpool add <pool> log mirror /dev/sdd /dev/sde
+
+#If using a SSD Read cache, a single drive is ok, if fails, zfs reads the actual disks
+#Add cache to pool
+zpool cache <pool> cache /dev/sde
+
+#Scrub filesystem, similar to fsck in other filesystems, data is already scrubbed at read, this just does all
+zpool scrub <pool>
+
+-----------------------------------------------------------------------------------
+
+#Create a zfs dataset within the pool
+zfs create <pool>/<dataset>
+
+#Delete zfs dataset
+zfs destroy <pool>/<dataset>
+
+#Create dataset within a dataset, inheritance is turned on by default
+zfs create <pool>/<dataset>/<dataset>
+
+#List all properties of a ZFS dataset
+zfs get all <pool>/<dataset>
+
+#Change mount point of a zfs dataset
+sudo zfs set mountpoint=<new mount location> <pool>/<dataset>
+
+#Set quota on dataset, setting it to 100m
+zfs set quota=100m <pool>/<dataset>
+
+#Reserve space out of main pool or dataset for this dataset in the future
+zfs set reservation=100m <pool>/<dataset>
+
+#Snapshots
+zfs snapshot <pool>/<filesystem>@<snapname>
+
+#Snapdir hidden by default
+cd .zfs
+cd <snapname>
+
+#List snapshots
+zfs list -t snapshot
+
+#Clone, creates read/write version of snapshot
+zfs clone <pool>/<dataset>@<snapname> <pool>/<newfilesystem>
+
+#ZFS Send/Recieve to another pool
+zfs send <pool>/<filesystem>@<snap> | zfs recv <secondpool>/<filesystem>
+
+#ZFS Send/Recv to another pool on remote host
+zfs send <pool>/<filesystem>@<snap> | ssh <username>@<hostname> zfs recv <secondpool>/<filesystem>
+
+#ZFS Send/Recv to another pool on remote host incremental changes between snapshots
+zfs send -i <pool>/<filesystem>@<oldsnap> <pool>/<filesystem>@<newsnap> | ssh <username>@<hostname> zfs recv <secondpool>/<filesystem>
+
+#ZFS Export/Import - used as alterative to move data from one system to another
+
+#Create a ZFS Volume, size can be something like 10G.
+zfs create -V <size> <pool>/<name>
