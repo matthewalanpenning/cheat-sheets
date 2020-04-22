@@ -1,26 +1,17 @@
 #Installing LXD/LXC on ubuntu
 apt install lxd lxd-client
 
-#Intialize LXD for configuration
+#Intialize LXD for configuration, use defaults by just pressing enter multiple times 
 lxd init 
-  - dir or zfs storage backend
-  - LXD over network, yes or no
-  - Address to bind LXD, all
-  - Which port, 8443
-  - Trust password that is shared secret between clients
-  - Configure LXD bridge, yes or no
-    - lxdbr0, easy name to identify
-  - Provide IPv4, yes
-    - can be any address, randomized
-    - NAT traffic, yes
-  - Provide IPv6, yes or no
-    - NAT, no
-	
+
 #Show a list of containers
 lxc list
 
 #Create a new ubuntu 18.04 container, container name optional
 lxc launch ubuntu:18.04 <container name>
+
+#Create a new CentOS 8 container from the image store
+lxc launch images:centos/8 <container name>
 
 #Open bash shell in container
 lxc exec <container name> -- /bin/bash
@@ -68,14 +59,8 @@ lxc profile copy default <new profile>
 #Edit profile using editor
 lxc profile edit <profile name>
 
-#Change eth0 to use macvlan (bridge)
-lxc profile device set <profile name> eth0 nictype macvlan
-
-#Change eth0 to use host adapter eno1 as parent device
-lxc profile device set <profile name> eth0 parent eno1
-
 #Create container that uses a specific profile
-lxc launch -p <profile name> ubuntu:18.04 net1 <container name>
+lxc launch -p <profile name> ubuntu:18.04 <container name>
 
 -------------------------------------------------------
 #List of remote locations to download images from
@@ -120,8 +105,11 @@ lxc publish <container>/<snapshot> --alias <new image name>
 #Export a container
 lxc image export <container> <filepath>
 
+-------------------------------------------------------
 
+#Forwarding of traffic can be used to direct host network traffic to container
+#Check to see if forwarding is turned on, should come back as 1 not 0 for forwarding
+systemctl net.ipv4.ip_forward
 
-systemctl net.ipv4.ip_forward #should came back as 1, if 0 need to set forward bit
+#Using IPTABLES to forward host tcp port 80 to container with ip 10.10.10.120
 sudo iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 80 -j DNAT --to 10.10.10.120:80
-
