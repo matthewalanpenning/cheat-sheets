@@ -107,3 +107,21 @@ git pull <remote branch name>
 #Pull you new changes back to github
 git push
 
+-----------------------------------------------------------------
+
+#Create a hidden .gitignore file that will describe what to not put on github. Put in main directory
+touch .gitignore 
+
+#Add to .gitignore a single file to ignore such as passwords.txt
+nano .gitignore
+  passwords.txt
+
+#Add an entire directory to be ignored such as directory secrets/
+nano .gitignore
+  secrets/*
+
+#Ignore any file with the extension .exe 
+nano .gitignore
+  *.exe
+
+#Github has .gitignore templates to help at https://github.com/github/gitignore
