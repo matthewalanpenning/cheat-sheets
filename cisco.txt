@@ -1,0 +1,354 @@
+####################################################################################
+GENERAL
+####################################################################################
+enable (move from user exec mode to privileged exec mode)
+disable (move from privileged exec mode to user exec mode)
+
+	config t (move to global configuration mode, short for configure terminal)
+		hostname NEWNAME
+		line vty 0 15
+			password cisco
+			login
+					
+		enable password cisco (Unencrypted password)
+		no enable password (removes password)
+		enable secret cisco (Encrypted password, trumps unencrypted password)
+
+
+		int fa 0/0 (Configures the interface fastethernet 0/0, use vlan 1 for switches)
+			ip address 192.168.1.1 255.255.255.0
+			description "WAN Interface"
+			ip address dhcp (gets an address from dhcp server)
+			no shutdown
+
+		banner motd #Welcome Authorized Users Unauthorized access prohibited!#
+		ip scp server enable (allows you to grab files via scp. On Linux, scp user@192.168.1.1:system://running-config /destination)
+
+
+	copy run start (Saves running config (RAM) to starup config (NVRAM))
+	write me (Same as copy run start just less steps)
+	do (Use before any command to not limit location, like do copy run start)
+	show run (Shows the running configuration, RAM)
+	show interfaces status (On switches this show status of each port up/down)
+	show interfaces fastEthernet 0/4 (Selects only a single port)
+	show ip interface brief
+	show mac-address-table
+	show arp
+	copy start tftp:
+ 
+
+####################################################################################
+PORT CHANNELING
+####################################################################################
+SWITCH
+	config t	
+		int range fastEthernet 1/1 - 2
+			channel-group 1 mode on (creates etherchannel port-channel 1 to combine interfaces)
+
+	show etherchannel summary
+	show etherchannel detail
+	show etherchannel port-channel
+
+
+ROUTER
+	config t
+		int po 1 (Creates Port-channel 1)
+			ip address 10.0.0.1 225.255.255.0
+		int Gi 1/0
+			channel-group 1 (Adds Gi 1/0 to Port-channel 1)
+			no shut
+	
+	show int po 1	
+	show ip int brief	
+
+####################################################################################
+VLAN
+####################################################################################
+SWITCH
+	config t
+		vlan 2 (Creates VLAN 2)
+			name IT (Names VLAN "IT")
+		no vlan 2 (Removes VLAN 2, all ports must first be removed from VLAN)
+
+		int vlan 2 (Configure the VLAN interface)
+			ip address 192.168.2.1 255.255.255.0
+			no shutdown
+			ip helper-address 10.0.0.1 (sends broadcast info to 10.0.0.1 if on another network like for dhcp server)
+		no int vlan 2 (Removes the VLAN interface)			
+		
+		int fa 0/1
+			switchport mode access (puts the interface in access mode)
+			switchport access vlan 1 (sets the port to vlan 1)
+			no shutdown (turns the interface on)
+			no switchport access vlan 6 (removes the interface from vlan 6)
+
+			switchport mode trunk (puts the interface in trunk mode)
+			switchport mode dynamic desirable
+			switchport trunk encapsulation dot1q (sets the encapsulation to 802.1q)
+			switchport trunk allow vlan 1-6 (use only if you are going to limit vlans on trunk)
+			switchport trunk allow vlan remove 2 (to remove vlan 2 from a trunk line)
+
+		int range fastEthernet 1/1 - 5 (selects multiple interfaces for easy work like setting vlans to them all)
+		int range fastEthernet 1/1 , fa 1/5 , fa 1/15 (selects multiple interfaces not in order)
+
+		vtp mode server (writes vlans)
+		vtp mode transparent (passes vtp data but not apply)
+		vtp mode client (read only)
+		vtp domain NAME
+		vtp password cisco
+
+	show vlan-switch
+	show vtp status (shows either server, client, or transparent)
+
+ROUTER
+	config t
+		int fa 0/0.10 (create a sub interface of fa 0/0)
+			encapsulation dot1q 10 (puts it on vlan 10)
+			ip address 192.168.10.1
+
+####################################################################################
+DNS
+####################################################################################
+SWITCH
+	config t
+		ip name-server 192.168.1.1 (Sets 192.168.1.1 as the DNS server of the switch)
+		ip domain lookup (Allows the switch to send out DNS queries)
+	show ip dns view
+
+
+ROUTER
+	config t
+		ip domain lookup (Allows the router to send out DNS queries)
+		ip dns server (Turns on dns server...port 53)
+		ip name-server 208.67.222.222 208.67.220.220
+	
+	show hosts (shows the dns cache)
+
+
+
+
+####################################################################################
+DHCP
+####################################################################################
+ROUTER
+	config t
+		service dhcp (turns on dhcp server, listening on port 67)
+
+		ip dhcp pool "Pool Name"
+			network 192.168.2.0 255.255.255.0
+			default-router 192.168.2.1
+			dns-server 192.168.2.1
+			domain-name NAME
+			netbios-name-server XXX.XXX.XXX.XXX
+			lease DAYS HOURS MINUTES
+			
+		ip dhcp excluded-address 192.168.2.1 192.168.2.99
+		ip dhcp excluded-address 192.168.2.200 192.168.2.254
+	
+	show ip dhcp binding
+	clear ip dhcp binding 192.168.1.102  (Removes DHCP binding for computer with IP 192.168.1.102)
+
+####################################################################################
+NAT
+####################################################################################
+ROUTER
+	config t
+		int fa 0/0 
+			ip nat outside (choose on outside or inside)
+			ip nat inside (choose on outside or inside)
+		access-list 1 permit 192.168.1.0 0.0.0.255  (Allows all computers in class c network)
+		ip nat inside source list 1 interface fa 0/0 overload   (overload=PAT, allows list 1 computers to use NAT-PAT to outside int fa0/0)
+
+
+	show ip nat translations
+
+
+####################################################################################
+SERIAL INTERFACES
+####################################################################################	
+
+	conf t	
+		int serial 0/0
+			encapsulation ppp (use this with non-cisco routers)
+			encapsulation hdlc (cisco proprietary, default choice in cisco)
+			clock rate 64000 (only on DCE end, auto set on gns3)
+	show controllers serial 0/0 (show if DCE or DTE is connected)
+
+####################################################################################
+Static Routing
+####################################################################################	
+SWITCH
+	config t
+		ip default-gateway 192.168.1.1
+
+
+ROUTER
+	config t
+
+		ip route 0.0.0.0 0.0.0.0 192.168.1.1 - Used on Routers to setup default route (192.168.1.1 is int destination ip)
+		ip route 192.168.4.0 255.255.255.0 192.168.3.2 (network to add, subnet of network, destination ip)
+
+	int gi 1/0
+		ip helper-address 192.168.3.2 (allows broadcasts to be sent through router to device on another network)
+
+	show ip route
+	
+####################################################################################
+RIP Routing
+####################################################################################	
+ROUTER
+	config t
+		router rip
+			version 2 (big change in version 2 is classless networks)
+			network 10.0.1.0 (sets the interface that will broadcast the rip traffic on)
+			network 192.168.2.0
+			no auto-summary (allows class A and B networks to be seperated)
+	
+	show ip rip database
+	show ip route
+
+####################################################################################
+OSPF Routing
+####################################################################################	
+ROUTER
+	config t
+		router ospf 1 (1 is process id, and is local to router, allowing multiple instances of ospf on the same router)
+			network 10.0.1.0 0.0.255.255 area 51 (inverse subnet, area defines group of routers that share ospf routes)
+			network 192.168.2.0 0.0.0.255 area 51 (192.168.2.0 is the network to broadcast info about)
+				
+	show ip route
+
+
+####################################################################################	
+SSH with SCP enabled
+####################################################################################	
+	conf t
+		username admin privilege 15 password 0 cisco (15 => stars in privilege mode, full rights to system, options:0,1,15)
+		ip domain-name R2
+		crypto key generate rsa  (choose 1024 bit)			
+		ip scp server enable  (scp coping of files, "scp -c aes128-cbc user@IPADDRESS:system://running-config running-config")
+
+		line vty 0 4
+			login local
+	ssh -l admin 192.168.1.2 (log into 192.168.1.2 with username admin)
+	show users (shows who is logged in and from where)
+
+####################################################################################	
+SSH into user mode
+####################################################################################	
+	conf t
+		enable password cisco (will need set to move from enable to priv)
+		username admin password 0 cisco (when using ssh, starts in enable mode)
+		ip domain-name R2
+		crypto key generate rsa  (choose 1024 bit)			
+		
+		line vty 0 4
+			login local
+
+	ssh -l admin 192.168.1.2 (log into 192.168.1.2 with username admin)
+	show users (shows who is logged in and from where)
+
+####################################################################################	
+SSH using AAA New-Model
+####################################################################################	
+
+	conf t
+		line vty 0 4
+			transport input ssh
+			privilege level 15 (set user privilege here for aaa new-model, ssh into priv mode)
+			
+		aaa new-model
+		username admin password 0 cisco (privilege 15 does not work for username in aaa new-model)
+		ip domain-name ESW2
+		crypto key generate rsa  (choose 1024 bit)			
+		ip ssh time-out 60
+		ip ssh authentication-retries 3
+			
+	debug ip ssh detail
+		
+	ssh -l admin 192.168.1.2 (log into 192.168.1.2 with username admin)
+	show users (shows who is logged in and from where)
+
+####################################################################################
+DHCP SNOOPING
+####################################################################################
+SWITCH
+	conf t
+		ip dhcp snooping (Turns on snooping globally for switch)
+		no ip dhcp snooping information option (Turns off DHCP Option #82. Can cause problems with servers)
+		ip dhcp snooping vlan 1 (Enables snooping to monitor VLAN 1, will need to do for each vlan)
+		int fa 1/1
+			ip dhcp snooping trust (Trusts this interface for dhcp, should be interface for real server)
+		int fa 1/2
+			ip dhcp snooping limit rate 10 (Client will only get maximum of 10 dhcp packets per second, prevents hacker flooding network)
+
+	show ip dhcp snooping
+	show ip dhcp snooping binding
+	debug ip dhcp snooping agent (Show details about live traffic)
+	debug ip dhcp snooping event (Show details about live traffic)
+	debug ip dhcp snooping packet (Show details about live traffic)
+
+####################################################################################
+Dynamic ARP Inspection
+####################################################################################
+SWITCH
+	conf t
+		ip arp inspection vlan 1
+		int fa 1/1
+			ip arp inspection trust
+		int fa 1/2
+			mac-address 1234.1234.1234
+		int range fa 1/2 - 24
+			ip verify source
+
+####################################################################################
+Access Control Lists (ACLs)
+####################################################################################
+Notes:	Subnet Masks are inverse ex. 0.0.0.255 is for class C, 0.0.255.255 class B, etc
+	The source/source-wildcard of 0.0.0.0/255.255.255.255 means "any".
+	The source/wildcard of 10.1.1.2/0.0.0.0 is the same as "host 10.1.1.2"
+	Standard ACLs control traffic by the comparison of the source address of the IP packets to the addresses configured in the ACL. (1-99)
+	Extended ACLs control traffic by the comparison of the source and destination addresses of the IP packets to the addresses configured in the ACL.
+
+ROUTER
+	conf t
+		access-list 1 deny 192.168.2.0 0.0.0.255 (standard access-list blocking the 192.168.2.0 network)
+		access-list 1 permit any (standard access-list allowing all traffic)
+
+	int gi 1/0
+		ip access-group 1 out (controls outbound traffic from router on the interface using ACL 1)
+		ip access-group 1 in  (controls inbond traffic to router on the interface using ACL 1)		
+
+
+	conf t
+		access-list 101 deny icmp 192.168.1.0 0.0.0.255 192.168.2.0 0.0.0.255 echo (blocks ping from 192.168.1.0 network to 192.168.2.0 network)
+		access-list 101 permit ip 10.1.1.0 0.0.0.255 172.16.1.0 0.0.0.255 (permits IP traffic from 10.1.1.0 network to 172.16.1.0 network)
+		access-list 101 permit tcp host 10.1.1.2 host 172.16.1.1 eq telnet (allows telnet from single computer at 10.1.1.2 to 172.16.1.1)
+		access-list 101 permit tcp host 10.1.1.2 host 172.16.1.1 eq 22 (allows port 22 from 10.1.1.2 to 172.16.1.1)
+		access-list 101 permit tcp host 10.1.1.2 host 172.16.1.1 (allows tcp, which includes telnet)
+		access-list 101 permit udp host 10.1.1.2 172.16.0.0 0.0.255.255 (allows udp from 10.1.1.2 to the 172.16 network)
+		access-list 101 permit ip 10.1.1.0 0.0.0.255 172.16.1.0 0.0.0.255 (allows IP, which includes TCP, UDP, and ICMP)
+
+		access-list 101 permit ip any any (extended access-list permits all traffic IP) 
+		access-list 101 deny ip any any (denys all IP traffic) 
+	
+	
+		int gi 1/0
+			ip access-group 101 out
+			ip access-group 101 in	(applies ACL 101 to the Gi 1/0 interface, analyzing traffic coming into the router)
+
+
+
+	ip access-list extended test
+		permit tcp host 1.1.1.1 host 5.5.5.5 eq www
+		permit icmp any any
+		permit udp host 6.6.6.6 10.10.10.0 0.0.0.255 eq domain (dns traffic)
+
+	ip access-list extended 101
+		5 deny tcp any any eq telnet (puts this higher on the list)
+
+	ip access-list standard 2
+
+
+	show access-list
+
