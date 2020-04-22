@@ -1,0 +1,48 @@
+#Configure AWS User
+aws configure
+
+#Create Standard Queue
+aws create-queue --queue-name Queue1
+
+#Create FIFO Queue
+aws create-queue --queue-name Queue2.fifo --attributes FifoQueue=true
+
+#List all queues
+aws sqs list-queues
+
+#List only queues that start with "Que"
+aws sqs list-queues --queue-name-prefix Que
+
+#Get Queue URL of queue named Queue1
+aws sqs get-queue-url --queue-name Queue1
+
+#Send a message
+aws sqs send-message
+  --queue-url https://sqs.us-east1.amazonaws.com/<acctNumber>/Queue1
+  --message-body "Hello World."
+
+#Send a batch of messages using JSON file
+aws sqs send-message-batch
+  --queue-url https://sqs.us-east1.amazonaws.com/<acctNumber>/Queue1
+  --entries file://myfile.json
+
+#Receive message
+aws sqs receive-message
+  --queue-url https://sqs.us-east1.amazonaws.com/<acctNumber>/Queue1
+  --attribute-names All
+  --mesage-attribute-names All
+  --max-number-of-messages 10
+
+#Delete message
+aws sqs delete-message
+  --queue-url https://sqs.us-east1.amazonaws.com/<acctNumber>/Queue1
+  --receipt-handle <unique number>
+
+#Purge the queue of all messages
+aws sqs purge-queue
+  --queue-url https://sqs.us-east1.amazonaws.com/<acctNumber>/Queue1
+
+#To delete the queue from AWS
+aws sqs delete-queue
+  --queue-url https://sqs.us-east1.amazonaws.com/<acctNumber>/Queue1
+
