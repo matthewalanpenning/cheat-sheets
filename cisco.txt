@@ -5,14 +5,14 @@ enable (move from user exec mode to privileged exec mode)
 disable (move from privileged exec mode to user exec mode)
 
 	config t (move to global configuration mode, short for configure terminal)
-		hostname NEWNAME
+		hostname <hostname>
 		line vty 0 15
-			password cisco
+			password <password>
 			login
 					
-		enable password cisco (Unencrypted password)
+		enable password <password> (Unencrypted password)
 		no enable password (removes password)
-		enable secret cisco (Encrypted password, trumps unencrypted password)
+		enable secret <password> (Encrypted password, trumps unencrypted password)
 
 
 		int fa 0/0 (Configures the interface fastethernet 0/0, use vlan 1 for switches)

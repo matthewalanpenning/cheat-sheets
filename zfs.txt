@@ -1,5 +1,5 @@
 #Install ZFS support on Ubuntu
-apt install zfsutils-linux 
+sudo apt install zfsutils-linux 
 
 #List current zpools
 zpool list

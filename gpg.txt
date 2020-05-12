@@ -1,0 +1,17 @@
+#Generate new GnuPG Keys, just follow prompts
+gpg --gen-key
+
+#Generate a public key to give to recipient
+gpg --export --output ~/<filename>.pub
+
+#Import a key you recieved
+gpg --import ~/<filename>.pub
+
+#List the keys you have
+gpg --list-key
+
+#Encrypt a file for a specific user's public key
+gpg --encrypt -r <user>@<email> <file>
+
+#To decrypt the file
+gpg <filename>.gpg

@@ -1,0 +1,15 @@
+#Install Java SDK
+apt install default-jdk
+
+#Add repository key
+wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+
+#Add repository
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+
+#Update system
+sudo apt update
+
+#Install Jenkins
+sudo apt install jenkins
+

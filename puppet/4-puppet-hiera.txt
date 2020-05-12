@@ -1,0 +1,28 @@
+########## Puppet Hiera ##########
+#lookup() searches through global, then environmental, and final module hiera configurations for values
+#lookup	() returns first value it finds, if default value presented in lookup() that is last
+
+#Global hiera file location, can be used in all environments
+/etc/puppetlabs/puppet/hiera.yaml
+
+#Environment hiera file location, contained to only that environment
+/etc/puppetlabs/code/environments/production/hiera.yaml
+
+
+#Module-based hiera file location, contained to only the module
+/etc/puppetlabs/code/environments/production/modules/<name>/hiera.yaml
+
+#Referencing data files
+-path - single file path
+-paths - array of file paths
+-glob - shell like glob pattern, multiple files in directory
+-globs - array of glob patterns to find files
+-uri - uri location
+-uris - array of uri locations
+-mapped_paths - array that is a collection of values
+
+#backends
+-data_hash - produces all of the key => value pairs at once as a Hash
+-lookup_key - produces a value per key, called multiple times
+-data_dig - similar to lookup_key but digs deeper into the key
+

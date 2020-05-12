@@ -1,0 +1,34 @@
+#Microk8s
+
+#List nodes
+kubectl get nodes
+
+#List nodes and docker version
+kubectl get nodes -o wide
+
+kubectl get namespaces
+kubectl get all -o wide
+
+kubectl run nginx --image nginx #Creates nginx pod, other examples include ansible, mongodb, redis, nodejs
+
+microk8s.docker images
+
+microk8s.inspect #tells you the state of the services
+microk8s.reset #shutsdown and restarts cluster
+
+kubectl scale deploy nginx --replicas=2 #adds another pod to nginx
+kubectl expose deploy nginx --port 80 --target-port 80 #forwards port 80 to nginx
+
+kubectl delete deploy nginx
+kubectl delete srv nginx
+
+kubectl describe pod <podname> | less
+kubectl describe node <nodename> | less
+
+
+#SERVICE TYPES
+NodePort - Pod can communicate with outside via port mapping
+	- Valid NodePort Ranges are from 30,000 - 32,767
+	
+ClusterIP - Pod gets an internal IP address
+LoadBalancer - Used to distribute load

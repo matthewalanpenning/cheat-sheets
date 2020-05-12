@@ -1,0 +1,122 @@
+#Default mode when opening file is command mode
+
+#Alternative arrow keys in command mode
+h #left
+j #down
+k #up
+l #right
+w #move from beginning word to next
+e #move from end of word to next
+b #move backwards from beginning word to previous
+f<character> #Move forward to chacater
+F<character> #Move backward to character
+
+
+#To get to 1st character of active line (from command mode)
+0
+
+
+#Enter into Insert mode from command mode
+i
+
+#Enter into Command Mode (esc key)
+Esc
+
+#Write/save the file (from command mode). The ":" puts you into command-line mode
+:w
+
+#Save the file and exit (command mode)
+:wq
+
+#Exit the file when no changes are made (command mode)
+:q
+
+#Exit the file without saving changes (command mode)
+:q!
+
+#Goto a line (command mode)
+<line number>G
+
+#Goto the first line in test
+gg
+
+#Goto the last line in the text
+G
+
+#Delete the line you are on (command mode)
+dd
+
+#Delete from where you are to end of file (command mode)
+dG
+
+#Delete a character from command mode
+x
+
+#Delete two characters from command mode
+2x
+
+#Delete an entire word from command mode
+dw
+
+#Undo a change from command mode
+u
+
+#To redo
+Ctrl + r
+
+#paste recently deleted data
+p
+
+#To change a letter in command mode
+r<new letter>
+
+#Change a word from command mode
+cw
+
+#Change a line from command mode
+c$ or C
+
+#Delete word from command mode
+dw
+
+#Delete line
+dd
+
+#Delete line from where cursor is to end
+d$ or D
+
+#Yank, copy a line
+yy
+
+#Yank from cursor to end of line
+y$ or Y
+
+#Go to insert mode to append at the end of the line
+A
+
+#Go to insert mode on the next line
+o
+
+#Search forward in document
+/<string>
+
+#Go to the next instance of search
+n
+
+#Go to the previos instance of search
+N
+
+#Search and replace ever instance of string
+:%s/<oldstring>/<newstring>/g
+
+#Search and replace instance of string between lines 3 and 9
+:3,9s/<oldstring>/<newstring>/g
+
+#Execute a shell command from vim
+:!<command>
+
+#In command line mode use Ctrl + d to view every command in command mode like ? in cisco
+:Ctrl+d
+
+#To enter visual mode (from command mode)
+v

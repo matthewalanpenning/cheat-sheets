@@ -1,0 +1,125 @@
+#########################################################
+########## Installation and setup for Centos 8 ##########
+#########################################################
+
+#Puppet learning resource: https://puppet.com/docs/puppet/latest/puppet_index.html
+
+
+
+------------------------
+------Server Setup------
+------------------------
+
+#Get the Puppet package for CentOS 8
+dnf install https://yum.puppetlabs.com/puppet-release-el-8.noarch.rpm -y
+
+#Install puppet server component
+dnf install puppetserver
+
+#Make exeption in Firewall if you have firewalld installed and enabled
+firewall-cmd --add-port=8140/tcp --permanent
+firewall-cmd --reload
+#OR if using IPTABLES use the following command to open the port
+iptables -A INPUT -p tcp -m state --state NEW --dport 8140 -j ACCEPT
+
+#Start Puppet server
+systemctl start puppetserver
+
+#Make puppet server persistently startup on reboots
+systemctl enable puppetserver
+
+#Check the status, should be active
+systemctl status puppetserver
+
+#Reboot after install to use ENV paths 
+reboot
+
+#Set puppet server to latest
+puppet resource package puppetserver ensure=latest
+
+#Determine the certname used by puppet, should be fqdn, also found at /etc/puppetlabs/puppet/ssl/certs/
+facter fqdn
+
+#Configure Puppet Server configuration file
+vi /etc/puppetlabs/puppet/puppet.conf
+
+#Paste in the following info within the config file, replace certname and hostname with fqdn.
+[main]
+certname = <server fqdn>
+server = <server fqdn>
+environment = production
+runinterval = 1h
+
+
+
+------------------------
+------Client Setup------
+------------------------
+
+#Get the Puppet package for CentOS 8
+dnf install https://yum.puppetlabs.com/puppet-release-el-8.noarch.rpm -y
+
+#Install puppet agent component
+dnf install puppet -y
+
+#Reboot after install to use ENV paths 
+reboot
+
+#Set puppet agent to latest
+puppet resource package puppet ensure=latest
+
+#Determine the client fqdn
+facter fqdn
+
+#Configure Client Agent to talk with server
+vi /etc/puppetlabs/puppet/puppet.conf
+#Paste in the following, replace certname with client hostname and replace server hostname
+[main]
+certname = <client fqdn>
+server = <server fqdn>
+environment = production
+runinterval = 1h
+
+#Register agent to server, sending it's cert info, and starting/enabling service
+puppet resource service puppet ensure=running enable=true
+
+
+
+
+--------------------------
+------Server Setup 2------
+--------------------------
+
+#On the Puppet server, view list of certs
+puppetserver ca list
+
+#Sign the client certificate using it's certname (use --all instead for all certs)
+puppetserver ca sign --certname <client certname>
+
+
+
+------------------------
+------Example Test------
+------------------------
+
+#On puppet server create a configuration manifest file
+vi /etc/puppetlabs/code/environments/production/manifests/site.pp
+
+#Agents are defined by node statements
+#the "node default" statement can be used as "catch all" or use client fqdn
+#example installs apache webserver on all puppet-agents
+node 'default' {
+  package { 'httpd':
+    ensure => "installed",
+  }
+  service { 'httpd':
+    ensure => running,
+    enable => true
+  }
+}
+
+#Validate that your site.pp file is configured without errors
+puppet parser validate site.pp
+
+#On Puppet client, apply configuration manually by issuing this command on puppet agent, agent auto checks every 30min by default
+puppet agent --test

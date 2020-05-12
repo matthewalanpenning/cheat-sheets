@@ -1,0 +1,66 @@
+#########################################################
+#################### Puppet Modules #####################
+#########################################################
+#Modules are a collection of manifests, resources, file, templates, classes, and definions
+#Modules should contain everything needed to configure an application
+
+
+#To view a list of currently installed modules
+puppet module list
+
+#Search for availabe modules online
+puppet module search <search string>
+
+#Install puppet module from online
+puppet module install <module name>
+
+#Uninstall puppet module fron online
+puppet module uninstall <module name>
+
+
+---------------------------------------------
+Creating your own Module
+---------------------------------------------
+
+#Install Puppet Module Development Kit
+dnf install pdk #for Centos8/Redhat8 operating systems
+apt install pdk #for Ubuntu/Debian operating systems
+
+#Navigate to modules directory
+cd /etc/puppetlabs/code/environments/production/modules
+
+#To create the structure of a new module. Use --skip-interview if you want
+pdk new module <module name>
+
+#Create an init.pp file in your module manifest
+vi <module name>/manifests/init.pp
+
+
+
+
+---------------------------------------------
+Example 1
+---------------------------------------------
+### EXAMPLE SETUP OF MULTIPLE NODES ###
+#Node 0 = puppet.example.com
+#Node 1 = web.example.com
+#Node 2 = db.example.com
+#Node 3 = mail.example.com
+
+#Add clients to site.pp, include module name that you will create
+vi /etc/puppetlabs/code/environments/production/manifests/site.pp
+	node 'web.example.com' {
+	  include webserversetup
+	}
+
+#Navigate to modules directory
+cd /etc/puppetlabs/code/environments/production/modules
+
+#To create the structure of a new module
+pdk new module webserversetup --skip-interview 
+
+#Create an init.pp file in your module manifest
+vi example-ssh/manifests/init.pp
+
+#Paste in the following
+class ssh {

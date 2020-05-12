@@ -1,0 +1,151 @@
+#########################################################
+################### Basic Puppet Code ###################
+#########################################################
+
+---------------------------------------------
+Example 1
+---------------------------------------------
+
+#Install a software package such as httpd
+package {'httpd':
+  ensure => present, #use absent to remove package, latest for always updated version
+}
+
+
+
+#Copy a file from host ~/index.html to agent at /var/www/html/index.html
+file {'index.html':
+  ensure => file,
+  path => /var/www/html/index.html',
+  mode => 664, #sets file permissions
+  source => ~/index.html,
+}
+
+
+#Ensure httpd service is started and enabled
+service {'httpd':
+  ensure => running,
+  enable => true,  
+}
+
+
+
+
+---------------------------------------------
+Example 2
+---------------------------------------------
+
+#Install a software package openssl after config file is ready
+package {'openssl':
+  ensure => latest,
+  before => File['/etc/ssh/sshd_config'] #sets file dependancy
+  notify => Service['httpd'], #will notify service if file has been changed, use this or subscribe in service
+}
+
+
+
+#Copy/replace a config file from host ~/sshd_config to agent at /etc/ssh/sshd_config
+#replaced files are backed up to /opt/puppetlabs/puppet/cache/clientbucket
+file {'index.html':
+  ensure => file,
+  path => /etc/ssh/sshd_config',
+  mode => 600,
+  replace => yes, #this is default option, no if you don't want to overwrite existing file
+  source => ~/sshd_config,
+}
+
+
+#Ensure sshd service is started and enabled, restart if sshd_config is changed
+service {'httpd':
+  ensure => running,
+  enable => true,
+#  subscribe => File['/etc/ssh/sshd_config'], #Use this or notify in package itself
+#  subscribe => [Package['openssl'], File['/etc/ssh/sshd_config']] #using multiple factors for restarting service on changes
+}
+
+
+
+
+---------------------------------------------
+Example 3
+---------------------------------------------
+
+#Create a user
+user { 'alice':
+  ensure => present
+  comment => "standard user",
+  home => "/home/alice",
+  managehome => true,
+  password => '<paste ssh 512 hash>' #Generate hash using: grub-crypt --sha-512
+}
+
+#Check disk space using df command and redirect output to tmp file, runs everytime
+exec {'diskfree':
+  command => '/usr/bin/df -h > /tmp/df-output.txt',
+}  
+
+#Check swapspace using cmd, but run only once
+exec {'swapspace':
+  cwd => '/tmp',
+  command => '/usr/sbin/swapon -s > swapspace.txt',
+  creates => '/tmp/swapspace.txt', #will not run command if this file is already created
+}
+
+
+
+---------------------------------------------
+Example 4
+---------------------------------------------
+
+#define executable paths, use captial E
+Exec {
+  path => ['/usr/bin', '/usr/sbin'],
+}
+
+#Check disk space using df command and redirect output to tmp file
+exec {'diskfree':
+  cwd => '/tmp',
+  command => 'df -h > df-output.txt',
+}  
+
+#use cron to set backup
+cron {'mybackup':
+  commnad => 'tar -cvf mybackup.tar /root/*',
+  hour => 01,
+  min => 30,
+}
+
+
+---------------------------------------------
+Example 5
+---------------------------------------------
+
+#Using noop, this code will not run, user will not be created
+user { 'bob':
+  ensure => present
+  comment => "standard user",
+  home => "/home/alice",
+  managehome => true,
+  password => '<paste ssh 512 hash>' #Generate hash using: grub-crypt --sha-512
+  noop = true,
+}
+
+#Clean up the tmp directory
+tidy {'/tmp':
+  age => '1d', #more than one day old, also use s (seconds), h (hours), w (weeks), etc
+  size => '5m'; #5 megabites or larger
+  recurse => true, #recursivly though directories
+}
+
+
+---------------------------------------------
+Example 6
+---------------------------------------------
+
+#Place a new entry in host file of agents
+host {'name.example.com':
+  ensure => present,
+  ip => '192.168.12',
+  target => '/etc/hosts',
+  host_aliases => 'name2'
+}

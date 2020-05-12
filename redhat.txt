@@ -1,0 +1,99 @@
+#List all licenses
+sudo subscription-manager list
+
+#Register license
+sudo subscription-manager registers --username=<username> --password=<password>
+
+#List available licenses
+sudo subscription-manager list --available
+
+#Update software
+dnf update
+
+#List dnf application update history
+dnf history
+
+#Undo an update
+sudo dnf history undo <number from history list>
+
+#View repo list
+sudo dnf repolist all
+
+#To view repo information for a package, such as httpd
+sudo dnf list httpd
+
+#Enable and start a service in same command
+systemctl enable --now <service name>
+
+#Check your IP information
+ip addr
+
+#Check your routing information
+ip route
+
+#network adapter config files
+/etc/sysconfig/network-scripts
+
+#Turn interface off
+sudo ifdown <interface>
+
+#Turn interface on
+sudo ifup <interface>
+
+#Change the hostname permanently
+hostnamectl set-hostname <new hostname>
+
+#Use network manager to show adapter info
+nmcli device show <interface>
+
+#Use network manager to edit adapter
+nmcli connection edit <interface>
+	set ipv4.method manual
+	set ipv4.addr 192.168.1.2
+	set ipv4.dns 1.1.1.1
+	set ipv4.gateway 192.168.1.1
+	save persistent
+
+#Change timezone
+sudo timedatectl set-timezone America/New_York
+
+#Change NTP server
+vi /etc/chrony.conf
+systemctl restart chrony
+
+
+#Install NFS server
+dnf install nfs-utils
+
+#Start enable NFS services (rpcbind for NFS v3 and lower)
+sudo systemctl enable --now nfs-server rpcbind
+
+#Check status of NFS servier
+systemctl status nfs-server
+
+#Make a directory for sharing
+mkdir /exports
+
+#Edit nfs config file
+vi /etc/exports
+	/exports 192.168.1.0/24(rw,sync,root_squash)
+
+#Reload NFS configuration file
+sudo exportfs -r
+
+#Show NFS export shares
+sudo exportfs -v
+
+#Allow NFS server through firewall
+sudo firewall-cmd --permanent --add-service mountd
+sudo firewall-cmd --permanent --add-service rpc-bind
+sudo firewall-cmd --permanent --add-service nfs
+sudo firewall-cmd --restart
+
+#Show NFS shares from server 192.168.1.1
+showmount -e 192.168.1.1
+
+#Connect to NFS share from client
+mount -t nfs 192.168.1.1:/exports /mnt
+
+

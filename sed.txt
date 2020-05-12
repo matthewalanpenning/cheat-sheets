@@ -1,0 +1,49 @@
+#Sed is stream editor, editing text on the fly. Can redirect text in or use a file
+
+#Substitue/replace first occurance of a string in a line
+sed 's/<old string>/<new string>/'
+
+#To have multiple commands use -e, can also use {}
+sed -e 's/<old string>/<new string>/'; 's/<old string>/<new string>/'
+
+#To substitue the 2nd occurance of string in every line
+sed 's/<old string>/<new string>/2'
+
+#To substitue the every occurance of string in every line
+sed 's/<old string>/<new string>/g'
+
+#Save sed output to a file
+sed 's/<old string>/<new string>/w <filename>'
+
+#To substitue the string only on line 2
+sed '2s/<old string>/<new string>/'
+
+#To substitue the string only on lines 2 and 3
+sed '2,3s/<old string>/<new string>/'
+
+#To substitue the string starting on line 2 to end of document
+sed '2,$s/<old string>/<new string>/'
+
+#To substitue a string only on line where something is in text
+sed '/<something>/s/<old string>/<new string>/'
+
+#To delete line number 4 from output
+sed '4d'
+
+#To delete lines 3 and 4
+sed '3,4d'
+
+#To insert new line of text at the begining of each line, insert uses \ 
+sed 'i\<string>\'
+
+#To append new line of text to end of each line
+sed 'a\<string>'
+
+#Change an entire 4th line for the new string
+sed '4c\<new line>'
+
+#Replace character sets, a with x, b with y, c with z
+sed 'y/abc/xyz'
+
+#Add line numbers to output 
+sed '='

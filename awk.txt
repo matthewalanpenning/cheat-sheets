@@ -1,0 +1,4 @@
+#Print first dataset, using : as field seperator
+awk -F: '{print $1}' /etc/passwd
+
+
