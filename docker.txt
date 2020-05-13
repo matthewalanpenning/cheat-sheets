@@ -41,7 +41,7 @@ docker run -d <image>
 #To bring docker container to forground
 docker attach <container name> OR <Container ID>
 
-#Run docker image as a dameon and persistant
+#Run docker image as a dameon and always keep running
 docker run -d --restart=always <image>
 
 #Run docker as a dameon and name container

@@ -1,28 +1,148 @@
-#Microk8s
+#Microk8s website
+microk8s.io
+#Terms
+node = kubernets master computer contols nodes, nodes to the work of running containers
+namespace = 
+pod = group of one or more containers running together to provide service
+service = config to expose a port for networking 
 
-#List nodes
-kubectl get nodes
+#To view snap versions of microk8s that are available
+snap info microk8s
 
-#List nodes and docker version
-kubectl get nodes -o wide
+#Using snap package to install latest stable
+sudo snap install microk8s --classic
 
-kubectl get namespaces
-kubectl get all -o wide
+#Using snap package to install specific version
+sudo snap install microk8s --classic --channel=1.13/stable
 
-kubectl run nginx --image nginx #Creates nginx pod, other examples include ansible, mongodb, redis, nodejs
+#If you want normal user to use microk8 commands without sudo
+sudo usermod -a -G microk8s $USER
+
+#Check the status of Microk8s
+microk8s.status
+
+#Enable kubernetes dashboard and kubedns services
+microk8s.enable dashboard dns
 
 microk8s.docker images
 
 microk8s.inspect #tells you the state of the services
-microk8s.reset #shutsdown and restarts cluster
+microk8s.reset #shuts down and restarts cluster
 
-kubectl scale deploy nginx --replicas=2 #adds another pod to nginx
-kubectl expose deploy nginx --port 80 --target-port 80 #forwards port 80 to nginx
 
-kubectl delete deploy nginx
-kubectl delete srv nginx
 
-kubectl describe pod <podname> | less
+------------------------------------
+Microk8s.kubectl
+------------------------------------
+#Get information about the kubernetes cluster
+microk8s.kubectl cluster-info
+
+#List all nodes that make up Kubernetes cluster
+#In Microk8s it should list just your computer
+microk8s.kubectl get nodes
+
+#List all nodes that make up Kubernetes cluster, with more parameters shown
+microk8s.kubectl get nodes -o wide
+
+#Get Kubernetes componets status
+microk8s.kubectl get cs
+
+
+#Get Services
+microk8s.kubectl get svc
+
+#Check the deployment process, find IP address of dashboard
+microk8s.kubectl get all --all-namespaces
+
+#Once you have IP address of dashboard, use https to access it, you will need a token
+https://<IP ADDRESS>:443
+
+#To get the token used to login to dashboard, run the following two commands
+token=$(microk8s.kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
+microk8s.kubectl -n kube-system describe secret $token
+
+
+------------------------------------
+Microk8s.kubectl PODS
+------------------------------------
+
+#Create a pod for the nginx server,other examples include ansible, mongodb, redis, nodejs, etc
+microk8s.kubectl run nginx --image nginx
+
+#View the pods you have created
+microk8s.kubectl get pods
+
+#Get information about the pod, can pipe to less for reability
+microk8s.kubectl describe pod nginx
+
+#To delete the nginx pod
+microk8s.kubectl delete pod nginx
+
+
+------------------------------------
+Microk8s.kubectl DEPLOYMENTS
+------------------------------------
+
+#Create a deployment using Nginx
+microk8s.kubectl create deployment nginx --image=nginx
+
+#Set the deployment to autoscale between min and max replicas
+microk8s.kubectl autoscale deployment nginx --min=3 --max=10
+
+#Scale the nginx deployment to specific number of containers, rerun to change number
+microk8s.kubectl scale deploy nginx --replicas=2
+
+#View the deployment
+microk8s.kubectl get deployments
+
+#View the pods you are created with deployment
+microk8s.kubectl get pods --show labels
+
+#View the replica set you are created with this deployment
+microk8s.kubectl get rs
+
+#View the horizontal pod autoscale set you are created with this deployment
+microk8s.kubectl get hpa
+
+#Get information about the deployment, can pipe to less for reability
+microk8s.kubectl describe deployment nginx
+
+#Open local port 80 to deployment port 80 on nginx deployment
+microk8s.kubectl expose deployment nginx --port 80 --target-port 80
+
+#View exposed services 
+microk8s.kubectl get services
+
+#Delete the service
+microk8s.kubectl delete service nginx
+
+#Delete the deployment, will also delete pods
+microk8s.kubectl delete deployment nginx
+
+#Delete the horizontal pod autoscale set you are created with this deployment
+microk8s.kubectl delete hpa nginx
+
+
+
+
+
+
+------------------------------------
+Microk8s.kubectl PHYSICAL VOLUMES
+------------------------------------
+#To view physical volumes
+microk8s.kubectl get pv
+
+#To create a physical volume
+???
+
+
+
+
+
+
+
+
 kubectl describe node <nodename> | less
 
 
