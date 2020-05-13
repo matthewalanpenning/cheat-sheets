@@ -127,6 +127,56 @@ microk8s.kubectl delete hpa nginx
 
 
 
+
+------------------------------------
+Microk8s.kubectl PODS FROM FILE
+------------------------------------
+#Create a simple pod running nginx (pod is one or more containers)
+cat << EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+    name: nginx
+spec:
+    containers:
+    - name: nginx
+        image: nginx
+EOF
+
+
+------------------------------------
+Microk8s.kubectl DEPLOYEMENT FROM FILE
+------------------------------------
+#Create a deployment with 2 nginx pods
+cat << EOF | kubectl create -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: nginx
+    labels:
+        app: nginx
+spec:
+    replicas: 2
+    selector:
+        matchLabels:
+            app: nginx
+    template:
+        metadata:
+            labels:
+                app: nginx
+        spec:
+            containers:
+            - name: nginx
+                image: nginx:1.15.4
+                ports:
+                - containerPort: 80
+EOF
+
+
+
+
+
+
 ------------------------------------
 Microk8s.kubectl PHYSICAL VOLUMES
 ------------------------------------
