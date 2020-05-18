@@ -131,3 +131,6 @@ sudo iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 80 -j DNAT --to
 
 #Change security to run docker within lxc/lxd containers
 lxc config set <container> security.nesting true
+
+#Change security to allow lxc/lxd containers to mount nfs/smb shares
+lxc config set <container> security.privileged true

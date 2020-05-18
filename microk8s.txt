@@ -1,18 +1,27 @@
 #Microk8s website
 microk8s.io
-#Terms
-node = kubernets master computer contols nodes, nodes to the work of running containers
-namespace = 
-pod = group of one or more containers running together to provide service
-service = config to expose a port for networking 
 
-#To view snap versions of microk8s that are available
+#Terms
+ - Node = kubernets master computer contols nodes, nodes do the work of running container pods
+ - Namespace = groups of kubernetes objects, default namespace is called "default", used for organization
+ - Pod = one or more containers running together to provide service
+ - ReplicaSet = two or more pods providing the service
+ - Deployment = more advanced version of ReplicaSet, controls updating better
+ - Service = configuration exposing a port for networking to an object 
+ - NodePort - Pod can communicate with outside via port mapping
+   - Valid NodePort Ranges are from 30,000 - 32,767	
+ - ClusterIP - Pod gets an internal IP address
+ - LoadBalancer - Used to distribute load of service to multiple pods
+ - Job - runs a job within pod and finishes
+ - CronJob - runs a job as a specific time
+
+#To view snap versions of microk8s that are available to install on Ubuntu
 snap info microk8s
 
-#Using snap package to install latest stable
+#Using snap package to install latest stable version of Microk8s
 sudo snap install microk8s --classic
 
-#Using snap package to install specific version
+#Using snap package to install specific version of Microk8s, such as 1.13
 sudo snap install microk8s --classic --channel=1.13/stable
 
 #If you want normal user to use microk8 commands without sudo
@@ -32,7 +41,7 @@ microk8s.reset #shuts down and restarts cluster
 
 
 ------------------------------------
-Microk8s.kubectl
+Microk8s.kubectl 
 ------------------------------------
 #Get information about the kubernetes cluster
 microk8s.kubectl cluster-info
@@ -47,11 +56,13 @@ microk8s.kubectl get nodes -o wide
 #Get Kubernetes componets status
 microk8s.kubectl get cs
 
-
 #Get Services
 microk8s.kubectl get svc
 
-#Check the deployment process, find IP address of dashboard
+To view all objects within the default namespace, prefix with "watch" to view it live
+microk8s.kubectl get all -o wide
+
+#Check the deployment process, find IP address of dashboard, prefix with "watch" to view it live
 microk8s.kubectl get all --all-namespaces
 
 #Once you have IP address of dashboard, use https to access it, you will need a token
@@ -60,6 +71,10 @@ https://<IP ADDRESS>:443
 #To get the token used to login to dashboard, run the following two commands
 token=$(microk8s.kubectl -n kube-system get secret | grep default-token | cut -d " " -f1)
 microk8s.kubectl -n kube-system describe secret $token
+
+#To see events that are happening/happed run
+microk8s.kubectl get events
+
 
 
 ------------------------------------
@@ -77,6 +92,9 @@ microk8s.kubectl describe pod nginx
 
 #To delete the nginx pod
 microk8s.kubectl delete pod nginx
+
+#To delete all the pods
+microk9s.kubectl delete pods --all
 
 
 ------------------------------------
@@ -123,16 +141,10 @@ microk8s.kubectl delete deployment nginx
 microk8s.kubectl delete hpa nginx
 
 
-
-
-
-
-
 ------------------------------------
 Microk8s.kubectl PODS FROM FILE
 ------------------------------------
-#Create a simple pod running nginx (pod is one or more containers)
-cat << EOF | kubectl create -f -
+#Create a file named ~/mypod.yaml and paste in the following:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -141,14 +153,16 @@ spec:
     containers:
     - name: nginx
         image: nginx
-EOF
+
+
+#Run the configuration yaml file
+microk8s.kubectl create -f ~/mypod.yaml
 
 
 ------------------------------------
 Microk8s.kubectl DEPLOYEMENT FROM FILE
 ------------------------------------
-#Create a deployment with 2 nginx pods
-cat << EOF | kubectl create -f -
+#Create a file named ~/mydeployment.yaml and paste in the following
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -170,35 +184,169 @@ spec:
                 image: nginx:1.15.4
                 ports:
                 - containerPort: 80
-EOF
 
 
-
-
+#Run the configuration yaml file
+microk8s.kubectl create -f ~/mydeployment.yaml
 
 
 ------------------------------------
-Microk8s.kubectl PHYSICAL VOLUMES
+Microk8s.kubectl NAMESPACES
 ------------------------------------
-#To view physical volumes
-microk8s.kubectl get pv
+#Get a list of namespaces
+microk8s.kubectl get namespaces
 
-#To create a physical volume
-???
+#To get all the pods within the kube-system namespace
+microk8s.kubectl --namespace kube-ctl get pods
 
-
-
-
-
+#To create a new namespace
+microk8s.kubectl create <new namespace>
 
 
+------------------------------------
+Microk8s.kubectl ADD/REMOVE NODES
+------------------------------------
+#Get a list of nodes
+microk8s.kubectl get nodes
 
+#To see all details of node
 kubectl describe node <nodename> | less
 
+#Two add more nodes, first install microk8s on second server
+#On the server you want to be the master run
+microk8s add-node
 
-#SERVICE TYPES
-NodePort - Pod can communicate with outside via port mapping
-	- Valid NodePort Ranges are from 30,000 - 32,767
-	
-ClusterIP - Pod gets an internal IP address
-LoadBalancer - Used to distribute load
+#The add-node command will print out join command, run that command on second node example of command:
+microk8s join ip-172-31-20-243:25000/DDOkUupkmaBezNnMheTBqFYHLWINGDbf
+
+#To remove a node, use the IP Address of node to remove
+microk8s remove-node <IP ADDRESS>
+
+#On the node that you want to leave the cluster run the command
+microk8s leave
+
+
+------------------------------------
+Microk8s.kubectl NODE SELECTOR
+------------------------------------
+#Get a list of nodes with additional info columns
+microk8s.kubectl get nodes -o wide
+
+#Add label to node, will use label to spin up pods on nodes with these labels
+microk8s.kubectl label node <node name> <label>=<value>
+
+#To view the labels associated with a node
+microk8s.kubectl get node <node name> --show-labels
+
+#To remove a label from a node, use minus sign instead of equals
+microk8s.kubectl label node <node name> <label>-
+
+#Run a pod on a specific node with the label/value info
+apiVersion: v1
+kind: Pod
+metadata:
+    name: nginx
+spec:
+    containers:
+    - name: nginx
+        image: nginx
+    nodeSelector
+      <label>: "<value>"
+      
+
+------------------------------------
+Microk8s.kubectl PERSISTENT HOSTPATH VOLUMES
+------------------------------------
+#ReclaimPolicy options are Retain, Recycle, Delete
+#Access Modes are ReadWriteOnce (RWO), ReadWriteMany (RWM), and ReadOnly (RO) - pv and pvc must match
+#HostPath creates filepath on the node of the pod that claims the storage
+#Hostpath can cause problem if pods run on different hosts
+
+#Create a persistent volume (pv) using Hostpath. This will create /mnt/kube on the node it is running on
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-hostpath
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/kube
+    
+
+#To view persistent volumes
+microk8s.kubectl get pv
+
+
+#Create/bind a claim (pvc) for some storage on the persistent volume above, links by storageClassName
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-hostpath
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+      
+#Create a pod that uses the pvc
+apiVersion: v1
+kind: Pod
+metadata:
+    name: nginx
+spec:
+  volumes:
+  - name: host-volume
+    persistentVolumeClaim:
+      claimName: pvc-hostpath
+  containers:
+  - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: host-volume
+          mountPath: /path/on/pod
+    nodeSelector:
+      <label>: "<value>"
+    
+    
+
+
+
+------------------------------------
+Microk8s.kubectl PERSISTENT NFS VOLUMES
+------------------------------------
+#Create nfs share (/etc/exports) on server 192.168.1.2 at /var/nfs/kube
+#Create a persistent volume (pv) using NFS to use nfs share
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-hostpath
+  labels:
+    type: nfs
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  nfs
+    server: "192.168.1.2"
+    path: "/var/nfs/kube"
+
+
+
+
+
+
+
+
